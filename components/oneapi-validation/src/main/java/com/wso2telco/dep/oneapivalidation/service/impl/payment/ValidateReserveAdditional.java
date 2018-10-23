@@ -16,6 +16,8 @@
 package com.wso2telco.dep.oneapivalidation.service.impl.payment;
 
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.json.JSONObject;
 
 import com.wso2telco.dep.oneapivalidation.exceptions.CustomException;
@@ -31,6 +33,7 @@ import com.wso2telco.dep.oneapivalidation.util.ValidationRule;
  */
 public class ValidateReserveAdditional implements IServiceValidate {
 
+	private static Log logger = LogFactory.getLog(ValidateReserveAdditional.class);
     /** The validation rules. */
     private final String[] validationRules = {"*", "transactions", "amountReservation", "*"};
 
@@ -39,19 +42,9 @@ public class ValidateReserveAdditional implements IServiceValidate {
      */
     public void validate(String json) throws CustomException {
         String endUserId = null;
-        String callbackData = null;
-        String notifyURL = null;
-        String notificationFormat = null;
         Double amount = null;
         String currency = null;
-        String description = null;
-        String onBehalfOf = null;
-        String purchaseCategoryCode = null;
-        String channel = null;
-        Double taxAmount = null;
-        String mandateId = null;
-        String productId = null;
-        String serviceId = null;
+        String description = null;;
         String referenceCode = null;
         int referenceSequence = 0;
         String transactionOperationStatus = null;
@@ -59,69 +52,54 @@ public class ValidateReserveAdditional implements IServiceValidate {
         try {
 
             JSONObject objJSONObject = new JSONObject(json);
-            JSONObject objAmountReservationTransaction = objJSONObject.getJSONObject("amountReservationTransaction");
+            if(!objJSONObject.isNull("amountReservationTransaction")) {
+            	
+                JSONObject objAmountReservationTransaction = (JSONObject) objJSONObject.get("amountReservationTransaction");
+                if (!objAmountReservationTransaction.isNull("endUserId")) {
+                    endUserId = nullOrTrimmed(objAmountReservationTransaction.get("endUserId").toString());
+                }
+                if (!objAmountReservationTransaction.isNull("referenceCode")) {
+                    referenceCode = nullOrTrimmed(objAmountReservationTransaction.get("referenceCode").toString());
+                }
+                if (!objAmountReservationTransaction.isNull("transactionOperationStatus")) {
+                    transactionOperationStatus = nullOrTrimmed(objAmountReservationTransaction.get("transactionOperationStatus").toString());
+                }
+                if (!objAmountReservationTransaction.isNull("referenceSequence")) {
+                    referenceSequence = Integer.parseInt(nullOrTrimmed(objAmountReservationTransaction.get("referenceSequence").toString()));
+                }
+                
+                if (!objAmountReservationTransaction.isNull("paymentAmount")) {
+                	JSONObject objPaymentAmount = (JSONObject) objAmountReservationTransaction.get("paymentAmount");
+                    if (!objPaymentAmount.isNull("chargingInformation")) {
+                    	JSONObject objChargingInformation = (JSONObject) objPaymentAmount.get("chargingInformation");
 
-            if (objAmountReservationTransaction.get("endUserId") != null) {
-                endUserId = nullOrTrimmed(objAmountReservationTransaction.get("endUserId").toString());
-            }
-            if (objAmountReservationTransaction.get("callbackData") != null) {
-                callbackData = nullOrTrimmed(objAmountReservationTransaction.get("callbackData").toString());
-            }
-            if (objAmountReservationTransaction.get("notifyURL") != null) {
-                notifyURL = nullOrTrimmed(objAmountReservationTransaction.get("notifyURL").toString());
-            }
-            if (objAmountReservationTransaction.get("notificationFormat") != null) {
-                notificationFormat = nullOrTrimmed(objAmountReservationTransaction.get("notificationFormat").toString());
-            }
-            if (objAmountReservationTransaction.get("referenceCode") != null) {
-                referenceCode = nullOrTrimmed(objAmountReservationTransaction.get("referenceCode").toString());
-            }
-            if (objAmountReservationTransaction.get("transactionOperationStatus") != null) {
-                transactionOperationStatus = nullOrTrimmed(objAmountReservationTransaction.get("transactionOperationStatus").toString());
-            }
-            if (objAmountReservationTransaction.get("referenceSequence") != null) {
-                referenceSequence = Integer.parseInt(nullOrTrimmed(objAmountReservationTransaction.get("referenceSequence").toString()));
-            }
-
-            JSONObject objPaymentAmount = (JSONObject) objAmountReservationTransaction.get("paymentAmount");
-
-            JSONObject objChargingInformation = (JSONObject) objPaymentAmount.get("chargingInformation");
-
-            if (objChargingInformation.get("amount") != null) {
-                amount = Double.parseDouble(nullOrTrimmed(objChargingInformation.get("amount").toString()));
-            }
-            if (objChargingInformation.get("currency") != null) {
-                currency = nullOrTrimmed(objChargingInformation.get("currency").toString());
-            }
-            if (objChargingInformation.get("description") != null) {
-                description = nullOrTrimmed(objChargingInformation.get("description").toString());
-            }
-
-            JSONObject objChargingMetaData = (JSONObject) objPaymentAmount.get("chargingMetaData");
-
-            if (objChargingMetaData.get("onBehalfOf") != null) {
-                onBehalfOf = nullOrTrimmed(objChargingMetaData.get("onBehalfOf").toString());
-            }
-            if (objChargingMetaData.get("purchaseCategoryCode") != null) {
-                purchaseCategoryCode = nullOrTrimmed(objChargingMetaData.get("purchaseCategoryCode").toString());
-            }
-            if (objChargingMetaData.get("channel") != null) {
-                channel = nullOrTrimmed(objChargingMetaData.get("channel").toString());
-            }
-            if (objChargingMetaData.get("taxAmount") != null) {
-                taxAmount = Double.parseDouble(nullOrTrimmed(objChargingMetaData.get("taxAmount").toString()));
-            }
-            if (objChargingMetaData.get("mandateId") != null) {
-                mandateId = nullOrTrimmed(objChargingMetaData.get("mandateId").toString());
-            }
-            if (objChargingMetaData.get("productId") != null) {
-                productId = nullOrTrimmed(objChargingMetaData.get("productId").toString());
-            }
-            if (objChargingMetaData.get("serviceId") != null) {
-                serviceId = nullOrTrimmed(objChargingMetaData.get("serviceId").toString());
+                        if (!objChargingInformation.isNull("amount")) {
+                            amount = Double.parseDouble(nullOrTrimmed(objChargingInformation.get("amount").toString()));
+                        }
+                        if (!objChargingInformation.isNull("currency")) {
+                            currency = nullOrTrimmed(objChargingInformation.get("currency").toString());
+                        }
+                        if (!objChargingInformation.isNull("description")) {
+                            description = nullOrTrimmed(objChargingInformation.get("description").toString());
+                        }
+                    } else {
+                    	logger.error("Missing mandatory parameter: chargingInformation");
+                    	throw new CustomException("SVC0002", "Invalid input value for message part %1", new String[]{"Missing mandatory parameter: chargingInformation"});
+                    }
+                    
+                } else {
+                	logger.error("Missing mandatory parameter: paymentAmount");
+                	throw new CustomException("SVC0002", "Invalid input value for message part %1", new String[]{"Missing mandatory parameter: paymentAmount"});
+                }
+                
+            } else {
+            	logger.error("Missing mandatory parameter: amountReservationTransaction");
+            	throw new CustomException("SVC0002", "Invalid input value for message part %1", new String[]{"Missing mandatory parameter: amountReservationTransaction"});
             }
 
-        } catch (Exception e) {
+        } catch (CustomException e) {
+			throw e;
+		} catch (Exception e) {
             System.out.println("Manipulating recived JSON Object: " + e);
                 throw new CustomException("POL0299", "Unexpected Error", new String[]{""});
         }
@@ -133,16 +111,6 @@ public class ValidateReserveAdditional implements IServiceValidate {
             new ValidationRule(ValidationRule.VALIDATION_TYPE_MANDATORY_DOUBLE_GT_ZERO, "amount", amount),
             new ValidationRule(ValidationRule.VALIDATION_TYPE_MANDATORY_CURRENCY, "currency", currency),
             new ValidationRule(ValidationRule.VALIDATION_TYPE_MANDATORY, "description", description),
-            new ValidationRule(ValidationRule.VALIDATION_TYPE_OPTIONAL, "onBehalfOf", onBehalfOf),
-            new ValidationRule(ValidationRule.VALIDATION_TYPE_OPTIONAL, "notificationFormat", notificationFormat),
-            new ValidationRule(ValidationRule.VALIDATION_TYPE_OPTIONAL, "purchaseCategoryCode", purchaseCategoryCode),
-            new ValidationRule(ValidationRule.VALIDATION_TYPE_OPTIONAL_PAYMENT_CHANNEL, "channel", channel),
-            new ValidationRule(ValidationRule.VALIDATION_TYPE_OPTIONAL_DOUBLE_GE_ZERO, "taxAmount", taxAmount),
-            new ValidationRule(ValidationRule.VALIDATION_TYPE_OPTIONAL, "serviceId", serviceId),
-            new ValidationRule(ValidationRule.VALIDATION_TYPE_OPTIONAL, "mandateId", mandateId),
-            new ValidationRule(ValidationRule.VALIDATION_TYPE_OPTIONAL, "productId", productId),
-            new ValidationRule(ValidationRule.VALIDATION_TYPE_OPTIONAL_URL, "notifyURL", notifyURL),
-            new ValidationRule(ValidationRule.VALIDATION_TYPE_OPTIONAL, "callbackData", callbackData),
             new ValidationRule(ValidationRule.VALIDATION_TYPE_MANDATORY, "referenceCode", referenceCode),
             new ValidationRule(ValidationRule.VALIDATION_TYPE_OPTIONAL, "referenceSequence", Integer.toString(referenceSequence)),
             new ValidationRule(ValidationRule.VALIDATION_TYPE_MANDATORY, "transactionOperationStatus", transactionOperationStatus, "reserved")};

@@ -16,6 +16,8 @@
 package com.wso2telco.dep.oneapivalidation.service.impl.payment;
 
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.json.JSONObject;
 
 import com.wso2telco.dep.oneapivalidation.exceptions.CustomException;
@@ -31,6 +33,7 @@ import com.wso2telco.dep.oneapivalidation.util.ValidationRule;
  */
 public class ValidateReleaseReservation implements IServiceValidate {
 
+	private static Log logger = LogFactory.getLog(ValidateReleaseReservation.class);
     /** The validation rules. */
     private final String[] validationRules = {"*", "transactions", "amountReservation", "*"};
 
@@ -45,18 +48,25 @@ public class ValidateReleaseReservation implements IServiceValidate {
 
         try {
             JSONObject objJSONObject = new JSONObject(json);
-            JSONObject objAmountReservationTransaction = (JSONObject) objJSONObject.get("amountReservationTransaction");
+            if (!objJSONObject.isNull("amountReservationTransaction")) {
+            	JSONObject objAmountReservationTransaction = (JSONObject) objJSONObject.get("amountReservationTransaction");
 
-            if (objAmountReservationTransaction.get("endUserId") != null) {
-                endUserId = nullOrTrimmed(objAmountReservationTransaction.get("endUserId").toString());
+                if (!objAmountReservationTransaction.isNull("endUserId")) {
+                    endUserId = nullOrTrimmed(objAmountReservationTransaction.get("endUserId").toString());
+                }
+                if (!objAmountReservationTransaction.isNull("referenceSequence")) {
+                    referenceSequence = Integer.parseInt(nullOrTrimmed(objAmountReservationTransaction.get("referenceSequence").toString()));
+                }
+                if (!objAmountReservationTransaction.isNull("transactionOperationStatus")) {
+                    transactionOperationStatus = nullOrTrimmed(objAmountReservationTransaction.get("transactionOperationStatus").toString());
+                }
+            } else {
+            	logger.error("Missing mandatory parameter: amountReservationTransaction");
+            	throw new CustomException("SVC0002", "Invalid input value for message part %1", new String[]{"Missing mandatory parameter: amountReservationTransaction"});
             }
-            if (objAmountReservationTransaction.get("referenceSequence") != null) {
-                referenceSequence = Integer.parseInt(nullOrTrimmed(objAmountReservationTransaction.get("referenceSequence").toString()));
-            }
-            if (objAmountReservationTransaction.get("transactionOperationStatus") != null) {
-                transactionOperationStatus = nullOrTrimmed(objAmountReservationTransaction.get("transactionOperationStatus").toString());
-            }
-        } catch (Exception e) {
+        } catch (CustomException e) {
+			throw e;
+		} catch (Exception e) {
             System.out.println("Manipulating recived JSON Object: " + e);
             throw new CustomException("POL0299", "Unexpected Error", new String[]{""});
         }
